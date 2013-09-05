@@ -1,6 +1,5 @@
 package TransactionalIO;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,10 +7,12 @@ import java.io.IOException;
 public class TransactionalFileInputStream extends FileInputStream implements java.io.Serializable {
 	protected int fileOffset;
 	protected int fileSize;
+	volatile boolean fileOpened;
 	
-	public TransactionalFileInputStream(File file) throws FileNotFoundException {
+	public TransactionalFileInputStream(String file) throws FileNotFoundException {
 		super(file);
 		this.fileOffset = 0;
+		this.fileOpened = true;
 		try {
 			this.fileSize = this.available();
 		}
@@ -23,8 +24,10 @@ public class TransactionalFileInputStream extends FileInputStream implements jav
 	public String readLine() throws IOException {
 		int i, j=0;
 		char[] array = new char[2400];
-		
-		this.skip(this.fileOffset);
+		if(!this.fileOpened && this.fileOffset > 0) {
+			this.fileOpened = true;
+			this.skip(this.fileOffset);
+		}
 		i = this.read();
 		this.fileOffset++;
 		
