@@ -1,13 +1,13 @@
 package maybe;
 
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.PriorityQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // To manage slave_conds in master_node
 public class Slave_table {
 	public Slave_table(){
-		hash_table = new HashMap<String, Slave_cond>();
+		p_queue = new PriorityQueue<Slave_cond>(10, new Slave_comparator());
 		rwl = new ReentrantReadWriteLock();
 	}
 	
@@ -16,7 +16,7 @@ public class Slave_table {
 		System.out.println("key is: " + key);
 		Slave_cond slave = new Slave_cond(ip, port);
 		rwl.writeLock().lock();
-		hash_table.put(key, slave);
+		p_queue.add(slave);
 		rwl.writeLock().unlock();
 		return true;
 	}
@@ -24,25 +24,22 @@ public class Slave_table {
 	// return the node of min workload in form "ip|||port"
 	// if no node is in table, return null.
 	public String findMin(){
-		int min_value = MAX;
-		String min_node = null;
 		rwl.readLock().lock();
-		for(String key : hash_table.keySet()){
-			Slave_cond tmp_slave = hash_table.get(key);
-			if(tmp_slave.proc_num < min_value){
-				min_node = key;
-				min_value = tmp_slave.proc_num;
-			}	
-		}
+		Slave_cond slave = p_queue.peek();
 		rwl.readLock().unlock();
-		return min_node;
+		String ip_and_port = slave.getIp() + "|||" + slave.getPort();
+		return ip_and_port;
 	}
 	
-	private HashMap<String, Slave_cond> hash_table;
-	private final int MAX = 100000;
+	public Slave_cond[] getArray(){
+		return (Slave_cond[])p_queue.toArray(new Slave_cond[0]);
+	}
+	
+	private PriorityQueue<Slave_cond> p_queue;
 	ReentrantReadWriteLock rwl;
 }
 
+//Comparator for slave_cond, comparing based on slave_cond.proc_num
 class Slave_comparator implements Comparator<Slave_cond>{
 
 	@Override

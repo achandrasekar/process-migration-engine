@@ -5,7 +5,7 @@ public class Main {
 		//based on argument type, initiate master_node or slave_node.
 		if(args.length == 0){
 			Master_node master = new Master_node();
-			//new Thread(master, "checking").start();		//check and rearrange workload
+			new Thread(master, "checking").start();		//check and rearrange workload
 			new Thread(master, "receiving").start();	//receive message from slaves
 			master.execute();					//waiting for user input and arrange work for slaves
 		}

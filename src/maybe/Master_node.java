@@ -57,7 +57,17 @@ public class Master_node implements Runnable {
 		String t_name = Thread.currentThread().getName();
 		//System.out.println(t_name);
 		if(t_name.equals("checking")){
-			
+			while(true){
+				Slave_cond[] slave_array = s_table.getArray();
+				for(int i = 0; i < slave_array.length; i++)
+					System.out.println("aaa"+slave_array[i].getIp());
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 		else if(t_name.equals("receiving")){
 			ServerSocket server_sock = null;
@@ -101,6 +111,6 @@ public class Master_node implements Runnable {
 		else return;
 	}
 	
-	public static final int master_port = 1081;
+	public static final int master_port = 1082;
 	private Slave_table s_table;
 }
