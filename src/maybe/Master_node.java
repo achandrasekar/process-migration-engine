@@ -3,6 +3,8 @@ package maybe;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -45,6 +47,7 @@ public class Master_node implements Runnable {
 				int port = HelperFuncs.getPortFromMerge(ip_and_port);
 				System.out.println("ip"+ip+"port:"+port);
 				Send_msg_handler s_handler = new Send_msg_handler(ip, port);
+				s_handler.send_str(Message.command_line);
 				s_handler.send_str(command_line);
 			}
 			
@@ -59,8 +62,11 @@ public class Master_node implements Runnable {
 		if(t_name.equals("checking")){
 			while(true){
 				Slave_cond[] slave_array = s_table.getArray();
-				for(int i = 0; i < slave_array.length; i++)
-					System.out.println("aaa"+slave_array[i].getIp());
+				this.updata_table(slave_array);
+				if(slave_array != null &&slave_array.length > 0)
+					System.out.println(String.valueOf(slave_array[0].getLoad()));
+				this.load_balance();
+				
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -111,6 +117,43 @@ public class Master_node implements Runnable {
 		else return;
 	}
 	
-	public static final int master_port = 1082;
+	private boolean updata_table(Slave_cond[] slave_array){
+		Socket sock = null;
+		for(int i = 0; i < slave_array.length; i++){
+			try {
+				sock = new Socket(slave_array[i].getIp(), slave_array[i].getPort());
+				BufferedReader reader = null;
+				reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+				PrintWriter writer = null;
+				writer = new PrintWriter(sock.getOutputStream(), true);
+				writer.println(Message.request_workload);
+				int workload = 0;
+				workload = Integer.parseInt(reader.readLine());
+				slave_array[i].setProcNum(workload);
+			} catch (UnknownHostException e) {
+				
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				continue;
+			} catch(ConnectException e){			// connect to the node disconnect
+				System.out.println("connect error");
+				s_table.delete_item(slave_array[i]);		// delete the slave in the table
+				continue;
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.out.println("IOex");
+				continue;
+			}
+		}
+		return true;
+	}
+	
+	private void load_balance(){					// to balance load of slaves
+		
+	}
+	
+	public static final int master_port = 1083;
 	private Slave_table s_table;
 }

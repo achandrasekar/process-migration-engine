@@ -35,9 +35,15 @@ public class Slave_table {
 		return (Slave_cond[])p_queue.toArray(new Slave_cond[0]);
 	}
 	
+	public boolean delete_item(Slave_cond slave){
+		p_queue.remove(slave);
+		return true;
+	}
+	
 	private PriorityQueue<Slave_cond> p_queue;
 	ReentrantReadWriteLock rwl;
 }
+
 
 //Comparator for slave_cond, comparing based on slave_cond.proc_num
 class Slave_comparator implements Comparator<Slave_cond>{

@@ -65,7 +65,9 @@ public class Slave_node{
 			while(true){
 				Socket client_sock = serv_sock.accept();
 				String msg = Rec_msg_handler.receive(client_sock);
+				this.proc_msg(msg, client_sock);
 				System.out.println(msg);
+				
 				// parse and do the command.
 			}
 		} catch (IOException e) {
@@ -73,8 +75,16 @@ public class Slave_node{
 			e.printStackTrace();
 		}
 	}
+	
+	private void proc_msg(String message, Socket sock){
+		if(message.equals(Message.request_workload)){
+			Send_msg_handler.send_line(sock, String.valueOf(workload));
+			return;
+		}
+	}
 
-	String master_ip;
-	int master_port;
+	private String master_ip;
+	private int master_port;
+	private int workload = 1;
 	public static final int slave_port = 2080;
 }
