@@ -4,5 +4,6 @@ import java.io.Serializable;
 
 //all processes should implement this interface
 public interface MigratableProcess extends Runnable, Serializable{
-	void suspend();
+	public void suspend();
+	public void resume();
 }
