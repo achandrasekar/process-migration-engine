@@ -19,6 +19,7 @@ import network.Send_msg_handler;
 public class Master_node implements Runnable {
 	public Master_node(){
 		s_table = new Slave_table();
+		procTable = new ProcessTable();
 	}
 	
 	public boolean execute(){			
@@ -36,21 +37,32 @@ public class Master_node implements Runnable {
 		
 		while(true){
 			System.out.print("==>");
-			String command_line = sca.nextLine();		
-			String ip_and_port = s_table.findMin();	
-			if(ip_and_port == null){
-				System.out.println("fill in this code in Master_node->execute");
-				//to do: Do It Yourself
-			}
-			else{
-				String ip = HelperFuncs.getIpFromMerge(ip_and_port);
-				int port = HelperFuncs.getPortFromMerge(ip_and_port);
-				System.out.println("ip"+ip+"port:"+port);
-				Send_msg_handler s_handler = new Send_msg_handler(ip, port);
-				s_handler.send_str(Message.command_line);
-				s_handler.send_str(command_line);
+			String command_line = sca.nextLine();	
+			
+			if(command_line.equals("ps")){
+				procTable.printProcList();
+				continue;
 			}
 			
+			String ip_and_port = null;	
+			while((ip_and_port = s_table.findMin()) == null){
+				System.out.println("no slave machine is available, please wait");
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//to do: Do It Yourself
+			}
+			
+			String ip = HelperFuncs.getIpFromMerge(ip_and_port);
+			int port = HelperFuncs.getPortFromMerge(ip_and_port);
+			System.out.println("ip:"+ip+" port:"+port);
+			Send_msg_handler s_handler = new Send_msg_handler(ip, port);
+			s_handler.send_str(Message.command_line);	// tell slave node to launch a process
+			s_handler.send_str(command_line);		// send user input command
+			procTable.addProc(command_line);		//add process.  
 		}
 	}
 
@@ -63,12 +75,14 @@ public class Master_node implements Runnable {
 			while(true){
 				Slave_cond[] slave_array = s_table.getArray();
 				this.updata_table(slave_array);
-				if(slave_array != null &&slave_array.length > 0)
-					System.out.println(String.valueOf(slave_array[0].getLoad()));
+				if(slave_array != null){
+					for(int j = 0; j < slave_array.length; j++)
+						System.out.println(String.valueOf(slave_array[j].getLoad()));
+				}
 				this.load_balance();
 				
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -102,15 +116,21 @@ public class Master_node implements Runnable {
 				//System.out.println("local:"+local_ip+local_port);
 				//System.out.println(remote_ip+remote_port+":");
 				System.out.printf("msg is %s:\n", msg);
-				if(!s_table.addTable(remote_ip, Slave_node.slave_port)){
-					System.out.println("error occured in adding job table");
-					Send_msg_handler.send_line(client_sock, Message.error_adding_job_table);
+				
+				if(msg.equals(Message.terminated)){
+					procTable.terminateProc(msg.substring(Message.terminated.length()));
 				}
-				try {
-					client_sock.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				else if(msg.equals(Message.slaveSetup)){
+					if(!s_table.addTable(remote_ip, Slave_node.slave_port)){
+						System.out.println("error occured in adding job table");
+						Send_msg_handler.send_line(client_sock, Message.error_adding_job_table);
+					}
+					try {
+						client_sock.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -121,6 +141,7 @@ public class Master_node implements Runnable {
 		Socket sock = null;
 		for(int i = 0; i < slave_array.length; i++){
 			try {
+				System.out.println(slave_array[i].getIp()+slave_array[i].getPort());
 				sock = new Socket(slave_array[i].getIp(), slave_array[i].getPort());
 				BufferedReader reader = null;
 				reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
@@ -151,9 +172,52 @@ public class Master_node implements Runnable {
 	}
 	
 	private void load_balance(){					// to balance load of slaves
+		int mean_num = 0;
+		Slave_cond[] slave_array = s_table.getArray();
+		int[] less_array = new int[slave_array.length];
+		int[] large_array = new int[slave_array.length];
+		for(int i = 0; i < slave_array.length; i++)
+			mean_num += slave_array[i].proc_num;
+		if(slave_array.length != 0)
+			mean_num = mean_num/slave_array.length;
+
+		for(int i = 0; i < slave_array.length; i++){
+			if(slave_array[i].proc_num < mean_num){
+				less_array[i] = mean_num - slave_array[i].proc_num;
+				large_array[i] = -1;
+			}
+			else if(slave_array[i].proc_num > 1.2 * mean_num + 1){
+				large_array[i] = slave_array[i].proc_num - (int)(1.2* mean_num);
+				less_array[i] = -1;
+			}
+			else{
+				large_array[i] = -1;
+				less_array[i] = -1;
+			}
+		}
 		
+		int lessRecord = 0;
+		for(int i = 0; i < slave_array.length; i++){
+			if(large_array[i] > 0){
+				Send_msg_handler handler = 
+						new Send_msg_handler(slave_array[i].getIp(), slave_array[i].getPort());
+				handler.send_str(Message.send_object);
+				while(large_array[i] > 0){
+					while(lessRecord < less_array.length - 1 && less_array[lessRecord] <= 0)
+						lessRecord++;
+					less_array[lessRecord]--;
+					large_array[i] --;
+					handler.send_str(HelperFuncs.mergeIpPortCommand
+							(slave_array[lessRecord].getIp(), slave_array[lessRecord].getPort(), "__random__"));
+					System.out.println("relieve node:" + slave_array[lessRecord].getIp() + slave_array[lessRecord].getPort());
+					//slave_array[i].setProcNum(slave_array[i].getLoad() - 1);
+					s_table.loadMinusMinus(slave_array[i].getIp(), slave_array[i].getPort());
+				}
+			}
+		}
 	}
 	
-	public static final int master_port = 1083;
+	private ProcessTable procTable;
+	public static final int master_port = 1080;
 	private Slave_table s_table;
 }

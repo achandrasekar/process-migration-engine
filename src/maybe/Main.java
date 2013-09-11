@@ -10,9 +10,12 @@ public class Main {
 			master.execute();					//waiting for user input and arrange work for slaves
 		}
 		else if(isSlaveArg(args)){
-			System.out.println("yes");
 			Slave_node slave = new Slave_node(args[1]);
 			slave.execute();					//receive message from master or other slaves
+			new Thread(slave).start();
+		}
+		else{
+			System.out.println("Wrong parameters. Example: java maybe/Main -c 127.0.0.1");
 		}
 	}
 

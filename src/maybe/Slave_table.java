@@ -1,13 +1,16 @@
 package maybe;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 
 // To manage slave_conds in master_node
 public class Slave_table {
 	public Slave_table(){
-		p_queue = new PriorityQueue<Slave_cond>(10, new Slave_comparator());
+		
+		p_queue = new PriorityQueue<Slave_cond>(10, workComparator);
 		rwl = new ReentrantReadWriteLock();
 	}
 	
@@ -25,23 +28,62 @@ public class Slave_table {
 	// if no node is in table, return null.
 	public String findMin(){
 		rwl.readLock().lock();
-		Slave_cond slave = p_queue.peek();
+		Slave_cond slave = p_queue.poll();
+		if(slave == null){
+			//System.out.println("slave is null");
+			rwl.readLock().unlock();
+			return null;
+		}
 		rwl.readLock().unlock();
 		String ip_and_port = slave.getIp() + "|||" + slave.getPort();
+		System.out.println("ipandport:"+ip_and_port+"work:"+slave.proc_num);
+		slave.setProcNum(slave.getPort()+1);
+		rwl.writeLock().lock();
+		p_queue.add(slave);
+		rwl.writeLock().unlock();
 		return ip_and_port;
 	}
 	
 	public Slave_cond[] getArray(){
-		return (Slave_cond[])p_queue.toArray(new Slave_cond[0]);
+		rwl.readLock().lock();
+		Slave_cond[] slave_array = (Slave_cond[])p_queue.toArray(new Slave_cond[0]);
+		rwl.readLock().unlock();
+		return slave_array;
 	}
 	
 	public boolean delete_item(Slave_cond slave){
+		rwl.writeLock().lock();
 		p_queue.remove(slave);
+		rwl.writeLock().unlock();
 		return true;
+	}
+	
+	public void loadMinusMinus(String ip, int port){
+		Iterator<Slave_cond> it = p_queue.iterator();
+		while(it.hasNext()){
+			Slave_cond ss = it.next();
+			if(ss.getIp().equals(ip) && ss.getPort() == port)
+				ss.setProcNum(ss.getLoad() - 1);
+		}
 	}
 	
 	private PriorityQueue<Slave_cond> p_queue;
 	ReentrantReadWriteLock rwl;
+	
+	public static Comparator<Slave_cond> workComparator = new Comparator<Slave_cond>(){
+		@Override
+		public int compare(Slave_cond arg0, Slave_cond arg1) {
+			if(arg0.proc_num < arg1.proc_num)
+			{System.out.println("return -1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
+				return -1;}
+			else if(arg0.proc_num > arg1.proc_num){
+				System.out.println("return 1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
+				return 1;
+			}
+			System.out.println("fuck");
+			return 0;
+		}
+	};
 }
 
 
@@ -51,10 +93,14 @@ class Slave_comparator implements Comparator<Slave_cond>{
 	@Override
 	public int compare(Slave_cond arg0, Slave_cond arg1) {
 		if(arg0.proc_num < arg1.proc_num)
-			return -1;
-		else if(arg0.proc_num > arg1.proc_num)
+		{System.out.println("return -1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
+			return -1;}
+		else if(arg0.proc_num > arg1.proc_num){
+			System.out.println("return 1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
 			return 1;
+		}
 		else return 0;
 	}
 	
 }
+
