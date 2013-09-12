@@ -21,11 +21,6 @@ public class GrepProcess implements MigratableProcess
 	
 	public GrepProcess(String args[]) throws Exception
 	{
-		if (args.length != 3) {
-			System.out.println("usage: GrepProcess <queryString> <inputFile> <outputFile>");
-			throw new Exception("Invalid Arguments");
-		}
-		
 		this.query = args[0];
 		this.inFile = new TransactionalFileInputStream(args[1]);
 		this.outFile = new TransactionalFileOutputStream(args[2]);
@@ -58,7 +53,7 @@ public class GrepProcess implements MigratableProcess
 		} catch (EOFException e) {
 			//End of File
 		} catch (IOException e) {
-			System.out.println ("GrepProcess: Error: " + e);
+			System.out.println ("grep: Error: " + e);
 		}
 
 
@@ -76,7 +71,7 @@ public class GrepProcess implements MigratableProcess
 				out.flush();
 				out.close();
 			} catch(IOException e) {
-				System.out.println("GrepProcess: Error: " + e);
+				System.out.println("grep: Error: " + e);
 			}
 		}
 		
@@ -95,13 +90,13 @@ public class GrepProcess implements MigratableProcess
 				this.outFile = p.outFile;
 				this.query = p.query;
 			} catch(Exception e) {
-				System.out.println("GrepProcess: Error: " + e);
+				System.out.println("grep: Error: " + e);
 			}
 			
 		} catch(FileNotFoundException f) {
 			// Nothing needed here
 		} catch(IOException e) {
-			System.out.println("GrepProcess: Error: " + e);
+			System.out.println("grep: Error: " + e);
 		}
 	}
 
