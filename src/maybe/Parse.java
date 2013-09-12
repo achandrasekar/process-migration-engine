@@ -1,6 +1,5 @@
 package maybe;
 
-import migrate.*;
 import java.io.File;
 
 //to parse command lines
@@ -27,6 +26,23 @@ public class Parse {
 		else if(args[0].equals("cat")) {
 			if(args.length < 2) {
 				System.out.println("Usage: cat <filename1> <filename2> ...");
+				return false;
+			}
+			
+			// Check if the input files given are accessible
+			for(int i=1; i<args.length; i++) {
+				File f = new File(args[i]);
+				if(!(f.exists() && f.isFile())) {
+					System.out.println(args[i] + " is not a file or it does not exist. Try again.");
+					return false;
+				}
+			}
+		}
+		
+		// cmp process
+		else if(args[0].equals("cmp")) {
+			if(args.length != 3) {
+				System.out.println("Usage: cmp <filename1> <filename2>");
 				return false;
 			}
 			
