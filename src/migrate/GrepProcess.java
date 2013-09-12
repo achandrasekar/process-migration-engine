@@ -7,7 +7,6 @@ import TransactionalIO.*;
 
 public class GrepProcess implements MigratableProcess
 {
-	public static int counter;
 	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
@@ -16,15 +15,15 @@ public class GrepProcess implements MigratableProcess
 	private volatile boolean suspending;
 
 	public int getPid() {
-		return this.pid;
+		return this.pid;  // returns the pid
 	}
 	
-	public GrepProcess(String args[]) throws Exception
+	public GrepProcess(String args[], int pid) throws Exception
 	{
 		this.query = args[0];
 		this.inFile = new TransactionalFileInputStream(args[1]);
 		this.outFile = new TransactionalFileOutputStream(args[2]);
-		this.pid = GrepProcess.counter++;
+		this.pid = pid;
 	}
 
 	public void run()
@@ -65,6 +64,7 @@ public class GrepProcess implements MigratableProcess
 		suspending = true;
 		while (suspending) {
 			try {
+				// create a file with process id, so that it can be easily identified
 				String serializedFile = "Grep" + this.pid + ".ser";
 				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedFile));
 				out.writeObject(this);
@@ -79,10 +79,12 @@ public class GrepProcess implements MigratableProcess
 	
 	public void resume() {
 		try {
+			// Identify the serialized file
 			String serializedFile = "Grep" + this.pid + ".ser";
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedFile));
 		
 			try {	
+				// Get the serialized object and set it to the current object
 				GrepProcess p = (GrepProcess)in.readObject();
 				in.close();
 				this.pid = p.pid;
@@ -94,7 +96,7 @@ public class GrepProcess implements MigratableProcess
 			}
 			
 		} catch(FileNotFoundException f) {
-			// Nothing needed here
+			// Nothing needed here, this means it hasn't been suspended before
 		} catch(IOException e) {
 			System.out.println("grep: Error: " + e);
 		}

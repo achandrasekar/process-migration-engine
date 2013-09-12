@@ -33,16 +33,18 @@ public class TransactionalFileInputStream extends FileInputStream implements jav
 			this.skip(this.fileOffset);
 		}
 		
+		// Read byte by byte
 		i = this.read();
 		this.fileOffset++;
 		
-		// Exits on period or eof
-		while(i != -1 && i != 46) {
+		// Exits on \n or eof
+		while(i != -1 && i != 10) {
 			array[j++] = (char)i;
 			i = this.read();
 			this.fileOffset++;
 		}
 		
+		// Convert the character array into a string and return
 		return new String(array);
 	}
 }

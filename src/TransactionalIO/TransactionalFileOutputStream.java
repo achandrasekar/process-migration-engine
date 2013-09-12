@@ -14,7 +14,7 @@ public class TransactionalFileOutputStream extends FileOutputStream implements S
 	public void writeLine(String line) throws IOException {
 		char[] array = line.toCharArray();
 		for(int i=0; i<array.length; i++, this.fileOffset++) {
-			this.write(array[i]);
+			this.write(array[i]);   // By default this appends a byte to the end
 		}
 	}
 }
