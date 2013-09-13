@@ -3,6 +3,8 @@ package maybe;
 public class Main {
 	public static void main(String[] args){
 		//based on argument type, initiate master_node or slave_node.
+		// java maybe/Main is to initiate master node
+		// java maybe/Main -c ip_address is toinitiate slave node 
 		if(args.length == 0){
 			Master_node master = new Master_node();
 			new Thread(master, "checking").start();		//check and rearrange workload
@@ -11,8 +13,8 @@ public class Main {
 		}
 		else if(isSlaveArg(args)){
 			Slave_node slave = new Slave_node(args[1]);
+			new Thread(slave).start();			// this thread is used for receiving serialized object
 			slave.execute();					//receive message from master or other slaves
-			new Thread(slave).start();
 		}
 		else{
 			System.out.println("Wrong parameters. Example: java maybe/Main -c 127.0.0.1");

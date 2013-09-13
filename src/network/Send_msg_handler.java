@@ -10,21 +10,28 @@ public class Send_msg_handler{
 	public Send_msg_handler(String ip_addr, int port_num){
 		this.ip = ip_addr;
 		this.port = port_num;
-	}
-
-	public boolean send_str(String str){
-		Socket sock;
 		try {
 			sock = new Socket(ip, port);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return false;
 		}
+	}
+	
+	public void close(){
+		try {
+			this.sock.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public boolean send_str(String str){
+
 		
 		PrintWriter out;
 		try {
@@ -35,12 +42,6 @@ public class Send_msg_handler{
 			return false;
 		}
 		out.println(str);
-		try {
-			sock.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		return true;
 	}
 	

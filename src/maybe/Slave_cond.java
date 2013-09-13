@@ -2,6 +2,11 @@ package maybe;
 
 //record a slave's ip, port, socket, workload ...
 public class Slave_cond {
+	private String ip;	//slave's ip
+	int port;			//slave's port
+	int proc_num;		//number of running processes
+	boolean isValid;	//is this slave valid or not
+	
 	public Slave_cond(String addr, int port_num){
 		ip = addr;
 		port = port_num;
@@ -34,9 +39,4 @@ public class Slave_cond {
 	public boolean getValidity(){
 		return isValid;
 	}
-	
-	private String ip;
-	int port;
-	int proc_num;
-	boolean isValid;
 }

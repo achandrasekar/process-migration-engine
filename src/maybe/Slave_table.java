@@ -8,8 +8,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // To manage slave_conds in master_node
 public class Slave_table {
-	public Slave_table(){
-		
+	
+	private PriorityQueue<Slave_cond> p_queue;
+	private ReentrantReadWriteLock rwl;
+	
+	public Slave_table(){	
 		p_queue = new PriorityQueue<Slave_cond>(10, workComparator);
 		rwl = new ReentrantReadWriteLock();
 	}
@@ -67,8 +70,7 @@ public class Slave_table {
 		}
 	}
 	
-	private PriorityQueue<Slave_cond> p_queue;
-	ReentrantReadWriteLock rwl;
+
 	
 	public static Comparator<Slave_cond> workComparator = new Comparator<Slave_cond>(){
 		@Override
@@ -80,7 +82,6 @@ public class Slave_table {
 				System.out.println("return 1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
 				return 1;
 			}
-			System.out.println("fuck");
 			return 0;
 		}
 	};

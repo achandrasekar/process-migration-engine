@@ -44,6 +44,19 @@ public class Rec_msg_handler {
 		return str;
 	}
 	
+	public void close(){
+		try {
+			sock.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public String getIp(){
+		return sock.getInetAddress().getHostAddress();
+	}
+	
 	Socket sock;
 	BufferedReader reader;
 }
