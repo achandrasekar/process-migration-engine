@@ -53,8 +53,14 @@ public class Master_node implements Runnable {
 				System.exit(1);
 			else if(commandAndArg[0].equals("kill"))			// kill a process
 				procKill(commandAndArg);	
-			else if(commandAndArg[0].equals("transfer"))		// transfer a process to another node
-				procTransfer(commandAndArg[1], commandAndArg[2]);	
+			else if(commandAndArg[0].equals("ws")){				//workload show
+				printSlaves();
+			}
+			else if(commandAndArg[0].equals("transfer")){		// transfer a process to another node
+				String pidAndName = getPidAndName(commandAndArg);
+				System.out.println("transfer pid is:"+pidAndName);
+				procTransfer(pidAndName, commandAndArg[commandAndArg.length - 1]);
+			}
 			else
 				this.procCommands(commandAndArg);
 		}
@@ -70,6 +76,13 @@ public class Master_node implements Runnable {
 		s_handler.send_str(pidAndName);
 		procTable.terminateProc(pidAndName);
 		return true;
+	}
+	
+	private String getPidAndName(String[] commandAndArg){
+		String pid = "";
+		for(int i = 1; i < commandAndArg.length - 1; i++)
+			pid += commandAndArg[i] + " ";
+		return pid.trim();
 	}
 	
 	private boolean procTransfer(String fromPidName, String toIp){		// transfer frompid toip
@@ -98,6 +111,7 @@ public class Master_node implements Runnable {
 	
 	private String getProcIp(String pid){
 		String fromStatus = procTable.getStatus(pid);
+		System.out.println("pid is"+pid);
 		if(fromStatus == null){
 			System.out.println(pid + " not exist");
 			return null;
@@ -171,16 +185,20 @@ public class Master_node implements Runnable {
 		while(true){
 			Slave_cond[] slave_array = s_table.getArray();
 			this.updata_table(slave_array);
-			if(slave_array != null){
-				for(int j = 0; j < slave_array.length; j++){
-					System.out.print("Node: "+ slave_array[j].getIp()+"\t");
-					System.out.println("Process Number: "+String.valueOf(slave_array[j].getLoad()));
-				}
-			}
 			
 			this.load_balance();
 			
 			this.wait(this.wait_interval);
+		}
+	}
+	
+	private void printSlaves(){
+		Slave_cond[] slave_array = s_table.getArray();
+		if(slave_array != null){
+			for(int j = 0; j < slave_array.length; j++){
+				System.out.print("Node: "+ slave_array[j].getIp()+"\t");
+				System.out.println("Process Number: "+String.valueOf(slave_array[j].getLoad()));
+			}
 		}
 	}
 	

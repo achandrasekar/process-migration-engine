@@ -57,18 +57,28 @@ public class Migration_handler implements Runnable{
 	}
 	
 	private boolean serialize_receive() throws ClassNotFoundException, InstantiationException, IllegalAccessException, FileNotFoundException, IOException{
-		String className = pidAndName.substring(pidAndName.indexOf(':') + 1);
+		String className = getClassName(pidAndName);
+		String pidStr = pidAndName.substring(0, pidAndName.indexOf(':'));
+		System.out.println("class name is:"+className);
 		Class<?> newClass = Class.forName(Message.procPackName + className);
 		MigratableProcess mProc;
+		System.out.println("frist");
 		mProc = (MigratableProcess) newClass.newInstance();
-		ObjectInputStream in = new ObjectInputStream(new FileInputStream("test.ser"));
+		System.out.println("seconde");
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(className+pidStr+".ser"));
 		mProc = (MigratableProcess)in.readObject();
+		System.out.println("sdsd");
 		Thread newProc = new Thread(mProc);
 		newProc.start();
 		in.close();
 		Slave_node.tTable.add(pidAndName, newProc);
 		Slave_node.runProc.add(pidAndName, mProc);
 		return true;
+	}
+	
+	private String getClassName(String pidAndName){
+		String tmp = pidAndName.substring(pidAndName.indexOf(':') + 1);
+		return tmp.substring(0, tmp.indexOf(' '));
 	}
 	
 	Socket sock;

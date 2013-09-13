@@ -9,6 +9,9 @@ public class TransactionalFileInputStream extends FileInputStream implements jav
 	protected int fileSize;
 	volatile boolean fileOpened;
 	
+	public TransactionalFileInputStream() throws FileNotFoundException {
+		super("dummy");
+	}
 	// Constructor which calls its super class and then initializes offset and flag to denote new or process switched file
 	public TransactionalFileInputStream(String file) throws FileNotFoundException {
 		super(file);
@@ -33,16 +36,18 @@ public class TransactionalFileInputStream extends FileInputStream implements jav
 			this.skip(this.fileOffset);
 		}
 		
+		// Read byte by byte
 		i = this.read();
 		this.fileOffset++;
 		
-		// Exits on period or eof
-		while(i != -1 && i != 46) {
+		// Exits on \n or eof
+		while(i != -1 && i != 10) {
 			array[j++] = (char)i;
 			i = this.read();
 			this.fileOffset++;
 		}
 		
+		// Convert the character array into a string and return
 		return new String(array);
 	}
 }

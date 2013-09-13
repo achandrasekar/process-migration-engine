@@ -146,7 +146,6 @@ class procCommand implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		Rec_msg_handler rec_handler;
-		System.out.println("outer:"+Slave_node.workload);
 		
 		try{
 			rec_handler = new Rec_msg_handler(sock);
@@ -160,7 +159,7 @@ class procCommand implements Runnable{
 	
 		String message = rec_handler.rec_line();
 		//System.out.println("try:"+message);
-		String[] args = Parse.parseCommand(message);
+		String[] args = message.split("\\s+");
 			
 			
 		if(message.equals(Message.request_workload)){
@@ -185,7 +184,6 @@ class procCommand implements Runnable{
 	}
 	
 	private void procReqWorkload(){
-		System.out.println("workload:"+Slave_node.workload);
 		Send_msg_handler.send_line(sock, String.valueOf(Slave_node.workload));
 		return;
 	}
@@ -195,6 +193,7 @@ class procCommand implements Runnable{
 		ip_port_command = rec_handler.rec_line();
 		System.out.println("command is:"+ip_port_command);
 		String pidName = HelperFuncs.getCommandFromMerge(ip_port_command);
+		System.out.println("String pidName is:"+pidName);
 		rwl.writeLock().lock();
 		if(pidName.equals(Message.randomProc))
 			pidName = Slave_node.runProc.randomPick();
@@ -204,13 +203,15 @@ class procCommand implements Runnable{
 		return;
 		}
 		this.doSer(ip_port_command, pidName);
-		Slave_node.runProc.deleteNode(pidName);
+		if(Slave_node.runProc.contains(pidName)){
+			Slave_node.runProc.deleteNode(pidName);
+			Slave_node.workload--;
+		}
 		rwl.writeLock().unlock();
 		Send_msg_handler feedback = new Send_msg_handler(Slave_node.master_ip, Slave_node.master_port);
 		feedback.send_str(Message.enterSuspend);
 		feedback.send_str(pidName);
 		feedback.close();
-		Slave_node.workload--;
 	}
 	
 	private void procKill(Rec_msg_handler rec_handler){
@@ -239,8 +240,9 @@ class procCommand implements Runnable{
 			Class<?> newProc = Class.forName("migrate."+args[0]);
 			Class[] paramArray = new Class[2];
 			paramArray[0] = String[].class;
-			paramArray[1] = Double.class;
-			mProc = (MigratableProcess) newProc.getDeclaredConstructor(paramArray).newInstance(new Object[]{args, new Double(1)});
+			paramArray[1] = Integer.class;
+			mProc = (MigratableProcess) newProc.getDeclaredConstructor(paramArray)
+					.newInstance(new Object[]{args, new Integer(Integer.parseInt(pid))});
 			//System.out.println("beforwork:"+Slave_node.workload);
 			Slave_node.workload++;
 			//System.out.println("aaawork:"+Slave_node.workload);
@@ -271,6 +273,7 @@ class procCommand implements Runnable{
 		Thread tt = new Thread(mProc);
 		Slave_node.runProc.add(procName.trim(), mProc);
 		Slave_node.tTable.add(procName.trim(), tt);
+		System.out.println("added procName is :"+ procName.trim());
 		tt.start();
 		try {
 			tt.join();
@@ -278,12 +281,15 @@ class procCommand implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Slave_node.runProc.deleteNode(procName);
-		Slave_node.workload--;
+		if(Slave_node.runProc.contains(procName)){
+			System.out.println("ssssss");
+			Slave_node.runProc.deleteNode(procName);
+			Slave_node.workload--;
+		}
 		Send_msg_handler backHandler = new Send_msg_handler(Slave_node.master_ip, Slave_node.master_port);
 		backHandler.send_str(Message.terminated);
 		backHandler.send_str(procName);
-		System.out.println("procName is "+procName);
+		System.out.println("11procName is "+procName);
 	}
 	
 	private void doSer(String ip_port_command, String pidName){
