@@ -67,7 +67,10 @@ public class Master_node implements Runnable {
 	}
 	
 	private boolean procKill(String[] commandAndArg){
-		String pidAndName = commandAndArg[1];
+		String pidAndName = "";
+		for(int i = 1; i < commandAndArg.length; i++)
+			pidAndName += commandAndArg[i]+" ";
+		pidAndName = pidAndName.trim();
 		String nodeIp = this.getProcIp(pidAndName);
 		if(nodeIp == null)
 			return false;
@@ -111,12 +114,10 @@ public class Master_node implements Runnable {
 	
 	private String getProcIp(String pid){
 		String fromStatus = procTable.getStatus(pid);
-		System.out.println("pid is"+pid);
 		if(fromStatus == null){
 			System.out.println(pid + " not exist");
 			return null;
 		}
-		System.out.println("fromStatus:"+fromStatus);
 		if(fromStatus.equals(Message.terminatedStatus)){
 			System.out.println("the process is already terminated");
 			return null;
@@ -241,7 +242,6 @@ public class Master_node implements Runnable {
 			
 			else if(msg.equals(Message.enterSuspend)){
 				String proc = receiver.rec_line();
-				System.out.println("proc is"+proc);
 				procTable.setSuspend(proc);
 			}
 			if(msg.equals(Message.reRun)){

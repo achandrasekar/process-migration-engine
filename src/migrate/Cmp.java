@@ -38,7 +38,6 @@ public class Cmp implements MigratableProcess
 		
 		try {
 			while (!suspending) {
-				System.out.println("dummy");
 				// Deserialize if its an already existing object and resume from there or simply go with the this reference
 				String line1 = stream1.readLine();
 				String line2 = stream2.readLine();
@@ -56,14 +55,16 @@ public class Cmp implements MigratableProcess
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
-					// ignore it
-				}
+						System.out.println("stopped");
+						return;
+				} 
 			}
-		} catch (EOFException e) {
+		}  
+		catch (EOFException e) {
 			//End of File
 		} catch (IOException e) {
 			System.out.println ("cmp: Error: " + e);
-		}
+		} 
 
 
 		suspending = false;

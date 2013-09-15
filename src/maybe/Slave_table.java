@@ -19,7 +19,6 @@ public class Slave_table {
 	
 	public boolean addTable(String ip, int port){
 		String key = ip + "|||" + port;
-		System.out.println("key is: " + key);
 		Slave_cond slave = new Slave_cond(ip, port);
 		rwl.writeLock().lock();
 		p_queue.add(slave);
@@ -39,7 +38,6 @@ public class Slave_table {
 		}
 		rwl.readLock().unlock();
 		String ip_and_port = slave.getIp() + "|||" + slave.getPort();
-		System.out.println("ipandport:"+ip_and_port+"work:"+slave.proc_num);
 		slave.setProcNum(slave.getPort()+1);
 		rwl.writeLock().lock();
 		p_queue.add(slave);
@@ -76,10 +74,9 @@ public class Slave_table {
 		@Override
 		public int compare(Slave_cond arg0, Slave_cond arg1) {
 			if(arg0.proc_num < arg1.proc_num)
-			{System.out.println("return -1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
+			{
 				return -1;}
 			else if(arg0.proc_num > arg1.proc_num){
-				System.out.println("return 1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
 				return 1;
 			}
 			return 0;
@@ -93,11 +90,10 @@ class Slave_comparator implements Comparator<Slave_cond>{
 
 	@Override
 	public int compare(Slave_cond arg0, Slave_cond arg1) {
-		if(arg0.proc_num < arg1.proc_num)
-		{System.out.println("return -1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
-			return -1;}
+		if(arg0.proc_num < arg1.proc_num){
+			return -1;
+		}
 		else if(arg0.proc_num > arg1.proc_num){
-			System.out.println("return 1, arg0:"+arg0.proc_num+"arg1"+arg1.proc_num);
 			return 1;
 		}
 		else return 0;

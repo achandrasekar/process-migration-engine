@@ -33,22 +33,17 @@ public class Grep implements MigratableProcess
 	
 	public void run()
 	{
-		System.out.println("suspend file offset:"+inFile.getFileOffset());
-		System.out.println("file:"+this.inFile.file);
 		DataInputStream ds = new DataInputStream(this.inFile);
 		PrintStream pst = new PrintStream(this.outFile);
 		try {
 			while (!suspending) {
 				
-				System.out.println("in the loop");
 				
 				String line = ds.readLine();
 				
-				System.out.println("line content:"+ line);
 
 				if (line == null) break;
 				
-				System.out.println("pruint this");
 				
 				if (line.contains(query)) {	
 					pst.println(line);
@@ -58,7 +53,8 @@ public class Grep implements MigratableProcess
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
-					// ignore it
+					System.out.println("stopped");
+					return;
 				}
 			}
 		} catch (EOFException e) {
@@ -77,7 +73,6 @@ public class Grep implements MigratableProcess
 		while (suspending) {
 			try {
 				// create a file with process id, so that it can be easily identified
-				System.out.println("suspend file offset:"+inFile.getFileOffset());
 				String serializedFile = "Grep" + this.pid + ".ser";
 				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedFile));
 				out.writeObject(this);

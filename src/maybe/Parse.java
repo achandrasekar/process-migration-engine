@@ -37,7 +37,7 @@ public class Parse {
 			return args;
 		}
 		
-		else if(args[0].equals("kill") && args.length == 2){
+		else if(args[0].equals("kill") && args.length >= 2){
 			return args;
 		}
 		

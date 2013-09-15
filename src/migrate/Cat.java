@@ -39,7 +39,6 @@ public class Cat implements MigratableProcess
 		
 		try {
 			while (!suspending) {
-				System.out.println("dummy");
 				String line = ds.readLine();
 				
 				// See if its the last file before terminating
@@ -58,7 +57,8 @@ public class Cat implements MigratableProcess
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
-					// ignore it
+					System.out.println("stopped");
+					return;
 				}
 			}
 		} catch (EOFException e) {

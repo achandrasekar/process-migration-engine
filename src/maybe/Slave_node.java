@@ -104,7 +104,6 @@ public class Slave_node implements Runnable{
 					continue;
 				}
 				String pidAndName = receiver.rec_line();
-				System.out.println("received line is "+pidAndName);
 				Migration_handler handler = new Migration_handler(client_sock, pidAndName);
 				Thread recThread = new Thread(handler, Message.receive_status);
 				recThread.start();
@@ -192,9 +191,7 @@ class procCommand implements Runnable{
 	private void procSendObj(Rec_msg_handler rec_handler){
 		String ip_port_command;
 		ip_port_command = rec_handler.rec_line();
-		System.out.println("command is:"+ip_port_command);
 		String pidName = HelperFuncs.getCommandFromMerge(ip_port_command);
-		System.out.println("String pidName is:"+pidName);
 		rwl.writeLock().lock();
 		if(pidName.equals(Message.randomProc))
 			pidName = Slave_node.runProc.randomPick();
@@ -217,14 +214,13 @@ class procCommand implements Runnable{
 	
 	private void procKill(Rec_msg_handler rec_handler){
 		String pidAndName = rec_handler.rec_line();
-		System.out.println("in:"+pidAndName);
 		MigratableProcess obj = Slave_node.runProc.find(pidAndName);
 		if(obj == null){
 			System.out.println(pidAndName + "not exists");
 			return;
 		}
 		Thread theThread = Slave_node.tTable.find(pidAndName);
-		theThread.interrupt();
+		theThread.interrupt();;
 		Slave_node.tTable.deleteNode(pidAndName);
 		Slave_node.runProc.deleteNode(pidAndName);
 		Slave_node.workload--;
@@ -236,7 +232,6 @@ class procCommand implements Runnable{
 		String procName = "";
 		try {			
 			String pid = rec_handler.rec_line();
-			System.out.println("pid is:"+pid);
 			procName = pid+":"+message;
 			Class<?> newProc = Class.forName("migrate."+args[0]);
 			Class[] paramArray = new Class[2];
@@ -283,14 +278,12 @@ class procCommand implements Runnable{
 			e.printStackTrace();
 		}
 		if(Slave_node.runProc.contains(procName)){
-			System.out.println("ssssss");
 			Slave_node.runProc.deleteNode(procName);
 			Slave_node.workload--;
 		}
 		Send_msg_handler backHandler = new Send_msg_handler(Slave_node.master_ip, Slave_node.master_port);
 		backHandler.send_str(Message.terminated);
 		backHandler.send_str(procName);
-		System.out.println("11procName is "+procName);
 	}
 	
 	private void doSer(String ip_port_command, String pidName){

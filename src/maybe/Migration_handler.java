@@ -43,7 +43,6 @@ public class Migration_handler implements Runnable{
 	
 	private boolean serialize_send(){
 		MigratableProcess procInface = Slave_node.runProc.find(pidAndName);
-		System.out.println("pidAndName:"+pidAndName);
 		if(procInface == null){
 			System.out.println("object is not found");
 			return false;
@@ -52,22 +51,17 @@ public class Migration_handler implements Runnable{
 		//System.out.println("class name is:"+className);
 		Send_msg_handler.send_line(sock, Message.receiveObj);//after joining, tell slave to receive
 		Send_msg_handler.send_line(sock, pidAndName);
-		System.out.println("yah");
 		return true;
 	}
 	
 	private boolean serialize_receive() throws ClassNotFoundException, InstantiationException, IllegalAccessException, FileNotFoundException, IOException{
 		String className = getClassName(pidAndName);
 		String pidStr = pidAndName.substring(0, pidAndName.indexOf(':'));
-		System.out.println("class name is:"+className);
 		Class<?> newClass = Class.forName(Message.procPackName + className);
 		MigratableProcess mProc;
-		System.out.println("frist");
 		mProc = (MigratableProcess) newClass.newInstance();
-		System.out.println("seconde");
 		ObjectInputStream in = new ObjectInputStream(new FileInputStream(className+pidStr+".ser"));
 		mProc = (MigratableProcess)in.readObject();
-		System.out.println("sdsd");
 		Thread newProc = new Thread(mProc);
 		newProc.start();
 		in.close();
