@@ -3,6 +3,7 @@ package migrate;
 import java.io.*;
 import java.lang.Thread;
 import java.lang.InterruptedException;
+
 import TransactionalIO.*;
 
 public class Cmp implements MigratableProcess
@@ -34,9 +35,11 @@ public class Cmp implements MigratableProcess
 		try {
 			while (!suspending) {
 				// Deserialize if its an already existing object and resume from there or simply go with the this reference
+				BufferedReader br = new BufferedReader(new InputStreamReader(this.file1));
+				String line1 = br.readLine();
 				
-				String line1 = this.file1.readLine();
-				String line2 = this.file2.readLine();
+				br = new BufferedReader(new InputStreamReader(this.file2));
+				String line2 = br.readLine();
 				
 				// Terminate if either of the files end
 				if (line1 == null || line2 == null) break;

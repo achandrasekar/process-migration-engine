@@ -2,23 +2,25 @@ package TransactionalIO;
 
 import java.io.*;
 
-public class TransactionalFileOutputStream extends FileOutputStream implements Serializable {
+public class TransactionalFileOutputStream extends OutputStream implements Serializable {
 	protected int fileOffset;
+	protected String file;
 	
-	public TransactionalFileOutputStream() throws FileNotFoundException {
-		super("dummy");
-	}
 	public TransactionalFileOutputStream(String file) throws FileNotFoundException {
-		super(file);
+		this.file = file;
 		this.fileOffset = 0;
 	}
 	
-	// Appending a line to the output file and tracking the offset
-	public void writeLine(String line) throws IOException {
-		char[] array = line.toCharArray();
-		for(int i=0; i<array.length; i++, this.fileOffset++) {
-			this.write(array[i]);   // By default this appends a byte to the end
-		}
+	public FileOutputStream open() throws IOException {
+		FileOutputStream fs = new FileOutputStream(this.file, true);
+		return fs;
 	}
-}
 
+	public void write(int element) throws IOException {
+		FileOutputStream fs = this.open();
+		fs.write(element);
+		this.fileOffset++;
+		fs.close();
+    }
+	
+}

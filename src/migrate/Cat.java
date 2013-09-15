@@ -3,6 +3,7 @@ package migrate;
 import java.io.*;
 import java.lang.Thread;
 import java.lang.InterruptedException;
+
 import TransactionalIO.*;
 
 public class Cat implements MigratableProcess
@@ -14,10 +15,6 @@ public class Cat implements MigratableProcess
 
 	public int getPid() {
 		return this.pid;
-	}
-	
-	public Cat(){												//default constructor
-		
 	}
 	
 	public Cat(String args[], int pid) throws Exception
@@ -36,8 +33,9 @@ public class Cat implements MigratableProcess
 		try {
 			while (!suspending) {
 
-				String line = this.inFile[i].readLine();
-
+				BufferedReader br = new BufferedReader(new InputStreamReader(this.inFile[i]));
+				String line = br.readLine();
+				
 				// See if its the last file before terminating
 				if (line == null) {
 					i++;

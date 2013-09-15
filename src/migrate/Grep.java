@@ -27,24 +27,20 @@ public class Grep implements MigratableProcess
 		this.pid = pid;
 	}
 	
-	public Grep() throws Exception {
-		this.inFile = new TransactionalFileInputStream();
-		this.outFile = new TransactionalFileOutputStream();
-		
-	}
-
 	public void run()
 	{
 
 		try {
 			while (!suspending) {
 
-				String line = this.inFile.readLine();
+				BufferedReader br = new BufferedReader(new InputStreamReader(this.inFile));
+				String line = br.readLine();
 
 				if (line == null) break;
 				
 				if (line.contains(query)) {
-					this.outFile.writeLine(line);
+					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(this.outFile));
+					bw.write(line);
 				}
 				
 				// Make grep take longer so that we don't require extremely large files for interesting results
@@ -82,5 +78,4 @@ public class Grep implements MigratableProcess
 		
 	}
 	
-
 }
