@@ -104,6 +104,7 @@ public class Slave_node implements Runnable{
 					continue;
 				}
 				String pidAndName = receiver.rec_line();
+				System.out.println("received line is "+pidAndName);
 				Migration_handler handler = new Migration_handler(client_sock, pidAndName);
 				Thread recThread = new Thread(handler, Message.receive_status);
 				recThread.start();

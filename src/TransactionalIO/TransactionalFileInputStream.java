@@ -4,8 +4,12 @@ import java.io.*;
 
 public class TransactionalFileInputStream extends InputStream implements java.io.Serializable {
 	protected int fileOffset;
-	protected String file;
+	public String file;
 
+	public int getFileOffset() {
+		return this.fileOffset;
+	}
+	
 	public TransactionalFileInputStream(String s) throws FileNotFoundException {
 		this.file = s;
 		this.fileOffset = 0;

@@ -78,7 +78,10 @@ public class Migration_handler implements Runnable{
 	
 	private String getClassName(String pidAndName){
 		String tmp = pidAndName.substring(pidAndName.indexOf(':') + 1);
-		return tmp.substring(0, tmp.indexOf(' '));
+		if(tmp.indexOf(' ') != -1)
+			return tmp.substring(0, tmp.indexOf(' '));
+		else
+			return tmp.substring(0);
 	}
 	
 	Socket sock;

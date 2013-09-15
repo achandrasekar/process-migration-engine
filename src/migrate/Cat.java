@@ -10,45 +10,53 @@ public class Cat implements MigratableProcess
 {
 	private TransactionalFileInputStream  inFile[];
 	private int pid;
+	private int fileCount;
 
-	private volatile boolean suspending;
+	private transient volatile boolean suspending;
 
 	public int getPid() {
 		return this.pid;
 	}
 	
-	public Cat(String args[], int pid) throws Exception
+	public Cat() {
+	}
+	
+	public Cat(String args[], Integer pid) throws Exception
 	{
 		// Initialize all the files that needs to be concatenated
 		this.inFile = new TransactionalFileInputStream[args.length];
-		for(int i=0; i<args.length; i++) {
-			this.inFile[i] = new TransactionalFileInputStream(args[i]);
+		fileCount = 0;
+		for(int i=1; i<args.length; i++) {
+			this.inFile[i-1] = new TransactionalFileInputStream(args[i]);
 		}
 		this.pid = pid;
 	}
 
 	public void run()
 	{
-		int i = 0;
+		
+		DataInputStream ds = new DataInputStream(this.inFile[fileCount]);
+		
 		try {
 			while (!suspending) {
-
-				BufferedReader br = new BufferedReader(new InputStreamReader(this.inFile[i]));
-				String line = br.readLine();
+				System.out.println("dummy");
+				String line = ds.readLine();
 				
 				// See if its the last file before terminating
 				if (line == null) {
-					i++;
-					if(i >= this.inFile.length) {
+					fileCount++;
+					if(fileCount >= this.inFile.length) {
 						break;
 					}
+					ds = new DataInputStream(this.inFile[fileCount]);
 				}
 				
-				System.out.println(line);  // Outputs the result to console
+				if(line != null)
+					System.out.println(line);  // Outputs the result to console
 				
 				// Make cat take longer so that we don't require extremely large files for interesting results
 				try {
-					Thread.sleep(100);
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					// ignore it
 				}
@@ -57,6 +65,8 @@ public class Cat implements MigratableProcess
 			//End of File
 		} catch (IOException e) {
 			System.out.println ("cat: Error: " + e);
+		} catch (NullPointerException e) {
+			
 		}
 
 
@@ -79,6 +89,4 @@ public class Cat implements MigratableProcess
 		}
 		
 	}
-
-
 }
